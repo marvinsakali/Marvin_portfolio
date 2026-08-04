@@ -1,0 +1,66 @@
+---
+title: A GiST index will not save a bad query
+---
+
+The job was a spatial join: 1.2 million GPS pings against 8,400 administrative
+polygons, answering "which district was this vehicle in". It ran for 40 minutes.
+There was a GiST index on both tables. The index was not the problem.
+
+## What the planner was actually doing
+
+`EXPLAIN (ANALYZE, BUFFERS)` is the whole job here. Read it before touching
+anything:
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT p.id, d.name
+FROM pings p
+JOIN districts d ON ST_Contains(d.geom, p.geom);
+```
+
+The plan showed a nested loop with an index scan — so the index *was* being
+used. The cost was elsewhere: each `ST_Contains` recheck was running against
+polygons averaging 12,000 vertices. The index gave a cheap bounding-box
+candidate set, and then Postgres did exact geometry maths 1.2 million times
+against enormous rings.
+
+## Three fixes, in order of payoff
+
+**1. Simplify the geometry you test against.** Keep the detailed geometry for
+display, and add a coarse column for joins:
+
+```sql
+ALTER TABLE districts ADD COLUMN geom_simple geometry(MultiPolygon, 4326);
+UPDATE districts SET geom_simple = ST_SimplifyPreserveTopology(geom, 0.0005);
+CREATE INDEX districts_geom_simple_idx ON districts USING gist (geom_simple);
+```
+
+Vertex count fell by 94%. Runtime fell with it.
+
+**2. Subdivide the monsters.** `ST_Subdivide` splits huge polygons into pieces
+with a vertex ceiling, which makes bounding boxes tight instead of continental:
+
+```sql
+CREATE TABLE districts_parts AS
+SELECT id, name, ST_Subdivide(geom, 256) AS geom FROM districts;
+CREATE INDEX ON districts_parts USING gist (geom);
+```
+
+This is usually the single biggest win on a coastline dataset, where one
+bounding box can cover half a country while the polygon covers a fjord.
+
+**3. Analyze.** A GiST index on a freshly bulk-loaded table has no useful
+statistics, and the planner will guess badly:
+
+```sql
+VACUUM ANALYZE districts_parts;
+```
+
+## The lesson
+
+An index narrows candidates. It does not make the exact predicate cheap. When a
+spatial query is slow despite an index, the question is almost never "is there
+an index" and almost always "how expensive is one comparison, and how many
+times am I doing it".
+
+Final runtime: 11 seconds.

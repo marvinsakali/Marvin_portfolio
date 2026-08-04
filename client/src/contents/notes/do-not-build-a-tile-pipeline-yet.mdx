@@ -1,0 +1,56 @@
+---
+title: Do not build a tile pipeline yet
+---
+
+Vector tiling is the most seductive piece of infrastructure in GIS. It is well
+documented, intellectually satisfying, and completely unnecessary for the map
+you are probably building.
+
+## The default that is fine for longer than you think
+
+A GeoJSON source loaded straight into MapLibre, with a demo basemap underneath.
+That is it. MapLibre will happily handle a few thousand points client-side, and
+clustering pushes the ceiling considerably higher:
+
+```js
+map.addSource("features", {
+  type: "geojson",
+  data: "/api/features",
+  cluster: true,
+  clusterRadius: 48,
+});
+```
+
+If your dataset fits in a payload the browser can download without complaint,
+you do not have a tiling problem. You have a map.
+
+## Symptoms that mean you have earned it
+
+Build the pipeline when you can point at one of these, measured:
+
+- The GeoJSON payload is over ~5 MB, or first paint waits on it.
+- You have polygons with enough vertices that the main thread stalls on pan.
+- The data changes per-user or per-request in ways a CDN cannot cache.
+- You need server-side generalisation: different geometry at different zooms.
+- Someone other than your app is consuming the tiles.
+
+Note that four of those five are about **data volume**, not features. Wanting
+nicer labels is not a tiling requirement.
+
+## What it actually costs
+
+A tile pipeline is not one component. It is a generation step (`tippecanoe`, or
+`ST_AsMVT` in Postgres), a storage decision (PMTiles on object storage, or a
+live endpoint), a cache-invalidation story for when data changes, and a style
+JSON that is now yours to maintain. Each of those is a thing that can break at
+3am, and none of them make the first version of your map better.
+
+## The upgrade path, when it comes
+
+The good news is that this is a genuinely deferrable decision, because MapLibre
+does not care where a source comes from. Swapping a `geojson` source for a
+`vector` source is a handful of lines and a layer's `source-layer` property.
+Design your layers so the filter logic reads from properties that will exist in
+both, and the migration is an afternoon.
+
+Build the afternoon's work on the afternoon you need it.

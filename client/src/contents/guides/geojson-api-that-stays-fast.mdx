@@ -1,0 +1,86 @@
+---
+title: Designing a GeoJSON API that stays fast
+---
+
+GeoJSON is a great interchange format and a mediocre transport format. It is
+verbose, it has no built-in pagination, and coordinates are the most repetitive
+data you will ever send over a wire. Here is how to keep an endpoint pleasant
+well past the point where the naive version stops being one.
+
+## Generate it in the database
+
+Do not `SELECT` rows and assemble GeoJSON in application code. Postgres builds
+the whole document in one pass, and the payload never exists as intermediate
+objects in your runtime:
+
+```sql
+SELECT json_build_object(
+  'type', 'FeatureCollection',
+  'features', COALESCE(json_agg(
+    json_build_object(
+      'type', 'Feature',
+      'id', f.id,
+      'geometry', ST_AsGeoJSON(f.geom)::json,
+      'properties', json_build_object(
+        'type', f.type, 'title', f.title, 'slug', f.slug, 'date', f.date
+      )
+    )
+  ), '[]'::json)
+) FROM features f WHERE f.published;
+```
+
+## Send fewer digits
+
+Six decimal places of latitude is about 11 cm. Seven is 1 cm. Anything past that
+is float noise being paid for in bandwidth, and defaults often give you fifteen:
+
+```sql
+ST_AsGeoJSON(f.geom, 6)::json
+```
+
+On a large collection this alone can cut the payload by a third.
+
+## Only send what draws
+
+Properties are the other half of the weight. A feature endpoint that powers a
+map needs whatever the style expressions read plus an identifier — usually
+`type`, `title`, and `slug`. The summary, tags, and body belong on the detail
+request that happens when someone clicks a pin. Resist the temptation to make
+one endpoint that serves every consumer.
+
+## Filter on the server, and mean it
+
+Every filter the UI exposes should exist as a query parameter, applied in SQL:
+
+```
+/api/features?type=note&from=2025-01-01&bbox=-10,35,30,60
+```
+
+Validate them — a bbox is four finite numbers, a type is one of a known enum —
+and apply the bbox with `ST_Intersects` against `ST_MakeEnvelope` so the GiST
+index does the work. Filtering client-side after downloading everything is the
+thing that makes an endpoint feel fine in development and terrible in
+production.
+
+## Cache like it is a static file
+
+Feature collections that change on deploy, not per request, should say so:
+
+```ts
+return new Response(body, {
+  headers: {
+    "content-type": "application/geo+json",
+    "cache-control": "public, max-age=60, stale-while-revalidate=600",
+  },
+});
+```
+
+`stale-while-revalidate` is the important half: users get an instant response
+from cache while the refresh happens behind them.
+
+## When to stop sending GeoJSON
+
+The format has a ceiling. Past roughly 5 MB, or once geometry complexity rather
+than count is the cost, no amount of trimming helps and you want vector tiles —
+`ST_AsMVT` for live data, PMTiles for static. Both are more infrastructure.
+Measure the payload before deciding you need them.

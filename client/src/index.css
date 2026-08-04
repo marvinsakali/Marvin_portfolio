@@ -1,0 +1,235 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Atlas design system — cartography / field survey.
+ * ink navy ground, paper ink, amber/teal/rust record classes.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-grid: var(--grid);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-project: var(--project);
+  --color-note: var(--note);
+  --color-guide: var(--guide);
+}
+
+:root {
+  --radius: 2px;
+
+  --background: oklch(0.19 0.026 253);
+  --foreground: oklch(0.91 0.017 92);
+  --surface: oklch(0.24 0.026 253);
+  --surface-2: oklch(0.28 0.026 253);
+  --card: oklch(0.235 0.026 253);
+  --card-foreground: oklch(0.91 0.017 92);
+  --popover: oklch(0.235 0.026 253);
+  --popover-foreground: oklch(0.91 0.017 92);
+
+  --primary: oklch(0.73 0.125 84);
+  --primary-foreground: oklch(0.19 0.026 253);
+  --secondary: oklch(0.28 0.026 253);
+  --secondary-foreground: oklch(0.91 0.017 92);
+  --muted: oklch(0.26 0.024 253);
+  --muted-foreground: oklch(0.68 0.014 92);
+  --accent: oklch(0.6 0.058 190);
+  --accent-foreground: oklch(0.19 0.026 253);
+  --destructive: oklch(0.59 0.145 38);
+  --destructive-foreground: oklch(0.95 0.01 92);
+
+  --border: oklch(0.32 0.024 253);
+  --grid: oklch(0.27 0.022 253);
+  --input: oklch(0.3 0.024 253);
+  --ring: oklch(0.73 0.125 84);
+
+  --project: oklch(0.73 0.125 84);
+  --note: oklch(0.6 0.058 190);
+  --guide: oklch(0.59 0.145 38);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-mono);
+    background-image:
+      linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+@utility rule-top {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Long-form MDX body */
+@utility prose-field {
+  & > * + * {
+    margin-top: 1.15rem;
+  }
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: color-mix(in oklch, var(--color-foreground) 88%, transparent);
+
+  & h2 {
+    font-size: 1.35rem;
+    margin-top: 2.75rem;
+    color: var(--color-foreground);
+  }
+  & h3 {
+    font-size: 1.05rem;
+    margin-top: 2rem;
+    color: var(--color-foreground);
+  }
+  & a {
+    color: var(--color-primary);
+    text-underline-offset: 3px;
+    text-decoration: underline;
+  }
+  & strong {
+    color: var(--color-foreground);
+  }
+  & ul,
+  & ol {
+    padding-left: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  & ul {
+    list-style: square;
+  }
+  & ol {
+    list-style: decimal;
+  }
+  & li::marker {
+    color: var(--color-primary);
+  }
+  & blockquote {
+    border-left: 2px solid var(--color-primary);
+    padding-left: 1rem;
+    color: var(--color-muted-foreground);
+  }
+  & code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--color-surface-2);
+    padding: 0.1rem 0.3rem;
+  }
+  & pre {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  & pre code {
+    background: transparent;
+    padding: 0;
+  }
+  & hr {
+    border-color: var(--color-border);
+  }
+}
+
+/* MapLibre chrome, tuned to the palette */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib a {
+  background: transparent !important;
+  color: var(--color-muted-foreground) !important;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+.maplibregl-ctrl-group button span {
+  filter: invert(1) brightness(1.6);
+}
+
+.maplibregl-popup-content {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none;
+}
+
+.maplibregl-popup-close-button {
+  color: var(--color-muted-foreground);
+  font-size: 16px;
+  padding: 0 6px;
+}

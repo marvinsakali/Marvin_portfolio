@@ -1,0 +1,65 @@
+---
+title: One table, three kinds of record
+---
+
+This site keeps portfolio projects, blog posts, and tutorials in the same
+Postgres table, discriminated by a `type` column. That is a deliberate choice
+and it is worth defending, because the obvious alternative — three tables, or
+three content systems — is what most portfolio sites do.
+
+## The shape
+
+```sql
+CREATE TYPE feature_type AS ENUM ('project', 'note', 'guide');
+
+CREATE TABLE features (
+  id         text PRIMARY KEY,
+  type       feature_type NOT NULL,
+  title      text NOT NULL,
+  slug       text NOT NULL UNIQUE,
+  summary    text NOT NULL,
+  body_path  text,
+  date       date NOT NULL,
+  geom       geometry(Point, 4326) NOT NULL,
+  tags       text[] NOT NULL DEFAULT '{}',
+  published  boolean NOT NULL DEFAULT true
+);
+```
+
+Every record is a point. A project is pinned where the work happened, a note is
+pinned where it was written or what it is about. The geometry is not decoration:
+it is what lets the map exist at all without a second dataset to keep in sync.
+
+## What it buys
+
+**One query layer.** The map, the list pages, and search are all the same
+`SELECT` with a different `WHERE`. When I added tag filtering, it worked
+everywhere at once, because there was only one place to add it.
+
+**One API.** `/api/features` returns GeoJSON for all three types. A consumer
+that wants only notes passes `?type=note`. There is no `/api/posts` slowly
+drifting away from `/api/projects`.
+
+**Nothing can go missing.** A note that exists on the blog but not on the map is
+impossible, because there is no separate map dataset to forget to update.
+
+## What it costs
+
+Type-specific fields have to live somewhere. `stack` is meaningful for projects
+and empty for notes; a guide might eventually want a difficulty rating. Right
+now those are nullable columns and empty arrays, which is the cheap answer. The
+expensive answer — a JSONB `meta` column, or per-type side tables — is worth
+paying for only when the divergence is real, and mine is three columns wide.
+
+The line I hold: if a field is used by two of the three types, it goes in the
+table. If it is used by one and would be `NULL` everywhere else forever, it goes
+in the frontmatter of the MDX file instead.
+
+## Why the body lives on disk
+
+The database stores what is needed to **list, map, and filter**. It does not
+store prose. Long-form content is MDX in the repo, and `body_path` points at it.
+
+That split means writing is `git commit`, review is a diff, and the database
+never becomes a place where formatting decisions are stored as escaped HTML. It
+also means the DB row for a 3,000-word guide is about 400 bytes.

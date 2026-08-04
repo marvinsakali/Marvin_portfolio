@@ -1,0 +1,58 @@
+---
+title: The projection you pick is a decision, not a detail
+---
+
+Every web map you have ever used lies about area. Web Mercator (EPSG:3857) is a
+conformal projection: it preserves angles, which is exactly what you want when
+you are panning a slippy map and expect roads to meet at the same angle they do
+on the ground. It does this by inflating everything as you move away from the
+equator, which is why Greenland looks like South America.
+
+That trade is fine — until you measure something.
+
+## Where it goes wrong
+
+The failure is almost never dramatic. It looks like this:
+
+```sql
+-- Wrong: area in "square degrees", which is not a unit
+SELECT ST_Area(geom) FROM parcels WHERE id = 4102;
+
+-- Wrong in a subtler way: metres, but Mercator metres
+SELECT ST_Area(ST_Transform(geom, 3857)) FROM parcels WHERE id = 4102;
+```
+
+The second query returns a number in metres, formatted like a real answer, off
+by 30% at 55° latitude. Nobody notices, because nobody has a second source to
+check it against.
+
+## The rule I use
+
+- **Storage:** EPSG:4326. It is the lingua franca; every input and every export
+  speaks it.
+- **Display:** EPSG:3857. Your tile server and MapLibre already assume it.
+- **Measurement:** `geography`, or a local projected CRS chosen for the area of
+  interest.
+
+In PostGIS the measurement case is one cast:
+
+```sql
+SELECT ST_Area(geom::geography) AS square_metres FROM parcels WHERE id = 4102;
+SELECT ST_Distance(a.geom::geography, b.geom::geography) AS metres
+FROM stations a, stations b WHERE a.id = 1 AND b.id = 2;
+```
+
+`geography` computes on the spheroid. It is slower than planar maths and it is
+correct, and for the volume of measurement most applications actually do, that
+trade is not close.
+
+## When to leave the data alone
+
+Reprojecting is lossy in the way all resampling is lossy: coordinates get
+rounded, topology can pinch, and a pipeline that reprojects at three different
+stages will produce three slightly different answers. If you are not measuring
+and not rendering, do not transform. Store what you were given, project at the
+edge, and write down which CRS each boundary of your system speaks.
+
+> A projection is a claim about what you are willing to distort. Make the claim
+> on purpose.

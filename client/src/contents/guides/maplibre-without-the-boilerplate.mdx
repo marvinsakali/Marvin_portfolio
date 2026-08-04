@@ -1,0 +1,127 @@
+---
+title: MapLibre without the boilerplate
+---
+
+MapLibre is an imperative library living inside a declarative framework. Most of
+the pain people have with it comes from fighting that, so the whole trick is
+deciding — once — which side owns what.
+
+**React owns the container. MapLibre owns everything inside it.**
+
+## Mount it exactly once
+
+```tsx
+const containerRef = useRef<HTMLDivElement>(null);
+const mapRef = useRef<maplibregl.Map | null>(null);
+
+useEffect(() => {
+  if (!containerRef.current || mapRef.current) return;
+
+  const map = new maplibregl.Map({
+    container: containerRef.current,
+    style: "https://demotiles.maplibre.org/style.json",
+    center: [0, 25],
+    zoom: 1.4,
+  });
+  mapRef.current = map;
+
+  return () => {
+    map.remove();
+    mapRef.current = null;
+  };
+}, []);
+```
+
+Empty dependency array, map in a ref, cleanup calls `remove()`. Put the map in
+`useState` instead and every state change re-renders a component holding a
+WebGL context; forget the cleanup and StrictMode's double-mount leaves you with
+two maps stacked on one div.
+
+MapLibre also touches `window` at import time, so on an SSR framework the map
+component must be dynamically imported and rendered client-side only.
+
+## Never remount to change data
+
+The reflex is to key the map on the filter state. Don't — you throw away the
+GPU context and the user's viewport on every checkbox click. Update the source
+instead:
+
+```tsx
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map?.isStyleLoaded()) return;
+  const source = map.getSource("features") as maplibregl.GeoJSONSource | undefined;
+  source?.setData(geojson);
+}, [geojson]);
+```
+
+For filtering data that is already loaded, `setFilter` is cheaper still — it
+never touches the source at all:
+
+```tsx
+map.setFilter("feature-points", ["in", ["get", "type"], ["literal", activeTypes]]);
+```
+
+Rule of thumb: **new data → `setData`. Same data, different subset →
+`setFilter`.**
+
+## Wait for the style, always
+
+`addSource` and `addLayer` throw if the style has not loaded. Every setup
+function needs the same guard:
+
+```tsx
+map.on("load", () => {
+  map.addSource("features", { type: "geojson", data: geojson });
+  map.addLayer({
+    id: "feature-points",
+    type: "circle",
+    source: "features",
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 2, 4, 10, 9],
+      "circle-color": [
+        "match", ["get", "type"],
+        "project", "#c99a2e",
+        "note", "#4a8f8a",
+        "guide", "#c15a3c",
+        "#e7e4d8",
+      ],
+      "circle-stroke-width": 1.5,
+      "circle-stroke-color": "#0c1420",
+    },
+  });
+});
+```
+
+Note that the colour logic is a style expression, not JavaScript. Expressions
+run on the GPU-side style engine, so a thousand points recolour without a
+thousand React renders. Push as much presentation into expressions as you can.
+
+## Interaction without stale closures
+
+Handlers registered inside a `[]` effect capture the first render's props
+forever. Read live values through a ref:
+
+```tsx
+const stateRef = useRef(state);
+stateRef.current = state;
+
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map) return;
+  const onClick = (e: maplibregl.MapLayerMouseEvent) => {
+    const feature = e.features?.[0];
+    if (feature) stateRef.current.onSelect(feature.properties.slug);
+  };
+  map.on("click", "feature-points", onClick);
+  return () => { map.off("click", "feature-points", onClick); };
+}, []);
+```
+
+## The short version
+
+- One map, in a ref, mounted once, removed on unmount.
+- Client-side only under SSR.
+- `setData` / `setFilter` — never remount.
+- Guard everything behind the `load` event.
+- Style expressions over JavaScript for anything per-feature.

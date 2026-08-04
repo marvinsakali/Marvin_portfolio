@@ -1,0 +1,100 @@
+---
+title: "PostGIS from zero: points, indexes, and your first spatial query"
+---
+
+Twenty minutes, one table, and a working nearest-neighbour query. No GIS
+background assumed — if you can write `SELECT`, you can do this.
+
+## 1. Turn it on
+
+PostGIS is an extension, not a separate database:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+SELECT PostGIS_Version();
+```
+
+If the second line returns a version string, you are done with setup.
+
+## 2. Store a point
+
+The type is `geometry(Point, 4326)`. The `4326` is the SRID — the coordinate
+system — and 4326 means plain longitude/latitude, the same numbers your phone
+shows you.
+
+```sql
+CREATE TABLE stations (
+  id    serial PRIMARY KEY,
+  name  text NOT NULL,
+  geom  geometry(Point, 4326) NOT NULL
+);
+
+INSERT INTO stations (name, geom) VALUES
+  ('Paris',  ST_SetSRID(ST_MakePoint(2.3522, 48.8566), 4326)),
+  ('Berlin', ST_SetSRID(ST_MakePoint(13.4050, 52.5200), 4326)),
+  ('Madrid', ST_SetSRID(ST_MakePoint(-3.7038, 40.4168), 4326));
+```
+
+**The mistake everyone makes once:** `ST_MakePoint` takes **longitude first**,
+then latitude. That is X then Y, the opposite order from how humans say
+coordinates out loud. If your data lands in the Indian Ocean off Africa, you
+have swapped them (or you have a NULL that became zero).
+
+## 3. Get the numbers back out
+
+```sql
+SELECT name, ST_X(geom) AS lng, ST_Y(geom) AS lat FROM stations;
+SELECT name, ST_AsGeoJSON(geom)::json AS geometry FROM stations;
+```
+
+`ST_AsGeoJSON` is how geometry leaves the database for a web map. You will use
+it constantly.
+
+## 4. Measure something correctly
+
+Distances in SRID 4326 come out in degrees, which is useless. Cast to
+`geography` and you get metres on the spheroid:
+
+```sql
+SELECT
+  a.name, b.name,
+  ROUND((ST_Distance(a.geom::geography, b.geom::geography) / 1000)::numeric, 1) AS km
+FROM stations a
+JOIN stations b ON a.id < b.id;
+```
+
+## 5. Index it
+
+Spatial indexes are GiST, not B-tree. Create it, then tell the planner about it:
+
+```sql
+CREATE INDEX stations_geom_idx ON stations USING gist (geom);
+VACUUM ANALYZE stations;
+```
+
+An index on an unanalyzed table is frequently ignored. This is the second
+mistake everyone makes once.
+
+## 6. Your first real query: nearest neighbour
+
+The `<->` operator is a distance ordering that the GiST index can serve
+directly, which makes "closest five" fast even on millions of rows:
+
+```sql
+SELECT name,
+       ROUND((geom::geography <-> ST_SetSRID(ST_MakePoint(4.8952, 52.3702), 4326)::geography)::numeric) AS metres
+FROM stations
+ORDER BY geom <-> ST_SetSRID(ST_MakePoint(4.8952, 52.3702), 4326)
+LIMIT 5;
+```
+
+Order by `<->` for the index-assisted ordering; use the `geography` cast in the
+`SELECT` list when you need the number to be true metres.
+
+## Where to go next
+
+Three functions cover most of the remaining work: `ST_Contains` (point in
+polygon), `ST_DWithin` (everything within N metres — use this instead of
+`ST_Distance(...) < N`, because only `ST_DWithin` uses the index), and
+`ST_Intersects`. Learn those and you can answer most spatial questions a web app
+will ever ask.
