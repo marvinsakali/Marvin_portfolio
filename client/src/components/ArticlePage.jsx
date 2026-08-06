@@ -11,7 +11,7 @@ const ArticlePage = ({ record }) => {
 
   return (
     <main className="flex-1">
-      <article className="mx-auto max-w-[1400px] px-4 sm:px-6">
+      <article className="mx-auto max-w-[1200px] px-4 sm:px-6">
         <div className="grid grid-cols-1 gap-10 py-12 lg:grid-cols-[1fr_260px] lg:py-16">
           <div className="max-w-2xl">
             <Link to={backTo} className="label hover:text-foreground">
@@ -55,14 +55,14 @@ const ArticlePage = ({ record }) => {
               <dl className="mt-4 flex flex-col gap-4 text-[11px]">
                 <div>
                   <dt className="label">Date</dt>
-                  <dd className="mt-1 text-foreground">
+                  <dd className="mt-1 text-foreground text-sm">
                     {formatDate(record.date)}
                   </dd>
                 </div>
 
                 <div>
                   <dt className="label">Coordinates</dt>
-                  <dd className="mt-1 text-foreground">
+                  <dd className="mt-1 text-foreground text-sm">
                     {formatCoords(record.lng, record.lat)}
                   </dd>
                 </div>
@@ -70,7 +70,7 @@ const ArticlePage = ({ record }) => {
                 {doc && (
                   <div>
                     <dt className="label">Reading</dt>
-                    <dd className="mt-1 text-foreground">
+                    <dd className="mt-1 text-foreground text-sm">
                       {doc.readingMinutes} min
                     </dd>
                   </div>
@@ -80,7 +80,7 @@ const ArticlePage = ({ record }) => {
                   <div>
                     <dt className="label">Tags</dt>
 
-                    <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                    <dd className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
                       {record.tags.map((tag) => (
                         <span
                           key={tag}
@@ -96,7 +96,7 @@ const ArticlePage = ({ record }) => {
                 <div>
                   <dt className="label">Slug</dt>
 
-                  <dd className="mt-1 break-all text-muted-foreground">
+                  <dd className="mt-1 break-all text-muted-foreground text-sm">
                     {record.slug}
                   </dd>
                 </div>

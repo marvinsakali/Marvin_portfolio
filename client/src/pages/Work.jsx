@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AtlasMap from "../components/AtlasMap";
 
@@ -14,19 +14,25 @@ const Work = () => {
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(null);
   const [selectedSlug, setSelectedSlug] = useState(null);
+  const [playing, setPlaying] = useState(false);
 
   const years = records.map((r) => Number(r.date.slice(0, 4)));
+    
   const minYear = years.length ? Math.min(...years) : 2024;
-  const maxYear = years.length ? Math.max(...years) : 2026;
+  const maxYear = years.length ? Math.max(...years) : new Date().getFullYear();
 
-  const [fromYear, setFromYear] = useState(minYear);
+  const [timelineYear, setTimelineYear] = useState(minYear);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return records.filter((r) => {
       if (!active.includes(r.type)) return false;
-      if (Number(r.date.slice(0, 4)) < fromYear) return false;
+
+      const year = Number(r.date.slice(0, 4));
+      
+
+      if (year > timelineYear) return false;
 
       if (!q) return true;
 
@@ -37,7 +43,7 @@ const Work = () => {
         r.stack.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [records, active, fromYear, query]);
+  }, [records, active, timelineYear, query]);
 
   const selected = visible.find((r) => r.slug === selectedSlug) || null;
 
@@ -46,6 +52,22 @@ const Work = () => {
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
+  useEffect(() => {
+    if (!playing) return;
+
+    const timer = setInterval(() => {
+      setTimelineYear((year) => {
+        if (year >= maxYear) {
+          setPlaying(false);
+          return maxYear;
+        }
+
+        return year + 1;
+      });
+    }, 1200);
+
+    return () => clearInterval(timer);
+  }, [playing, maxYear]);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -116,19 +138,44 @@ const Work = () => {
           <div className="border-b border-border p-4">
             <div className="flex items-center justify-between">
               <span className="label">Timeline</span>
-              <span className="label text-foreground">
-                {fromYear} - {maxYear}
-              </span>
+              <span className="label text-foreground">{timelineYear}</span>
             </div>
 
             <input
               type="range"
               min={minYear}
               max={maxYear}
-              value={fromYear}
-              onChange={(e) => setFromYear(Number(e.target.value))}
+              step={1}
+              value={timelineYear}
+              onChange={(e) => setTimelineYear(Number(e.target.value))}
               className="mt-3 w-full accent-[var(--color-primary)]"
             />
+
+            <div className="mt-2 flex justify-between text-[10px] tracking-[0.14em] uppercase text-muted-foreground">
+              <span>{minYear}</span>
+              <span>{maxYear}</span>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => {
+                  setTimelineYear(minYear);
+                  setPlaying(true);
+                }}
+                className="label rounded border border-border px-3 py-1 hover:bg-card"
+              >
+                ▶ Play
+              </button>
+
+              <button
+                onClick={() => {
+                  setPlaying(false);
+                  setTimelineYear(maxYear);
+                }}
+                className="label rounded border border-border px-3 py-1 hover:bg-card"
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
           {/* Results */}
@@ -203,7 +250,7 @@ const Work = () => {
             <span className="text-[10px] tracking-[0.14em] text-muted-foreground">
               {cursor
                 ? formatCoords(cursor[0], cursor[1])
-                : `${visible.length} / ${records.length} records`}
+                : `${timelineYear} ${visible.length} of ${records.length} records`}
             </span>
           </div>
 
@@ -216,6 +263,12 @@ const Work = () => {
                   style={{ color: TYPE_META[selected.type].color }}
                 >
                   {TYPE_META[selected.type].label}
+                </span>
+                <span
+                  className="text-[10px] tracking-[0.16em] uppercase"
+                  style={{ color: TYPE_META[selected.type].color }}
+                >
+                  {selected.domain}
                 </span>
 
                 <button
@@ -234,17 +287,43 @@ const Work = () => {
 
               <dl className="mt-4 grid grid-cols-2 gap-2 text-[10px] tracking-[0.12em] uppercase text-muted-foreground">
                 <div>
-                  <dt className="opacity-60">Date</dt>
-                  <dd className="text-foreground">
+                  <dt className="opacity-60 text-sm">Date</dt>
+                  <dd className="text-foreground text-sm">
                     {formatDate(selected.date)}
                   </dd>
                 </div>
 
                 <div>
-                  <dt className="opacity-60">Coordinates</dt>
-                  <dd className="text-foreground normal-case">
+                  <dt className="opacity-60 text-sm">Coordinates</dt>
+                  <dd className="text-foreground normal-case text-sm">
                     {formatCoords(selected.lng, selected.lat)}
                   </dd>
+                </div>
+                <div>
+                  <dt className="opacity-60 text-sm">Stack</dt>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.stack.map((r, index) => (
+                      <span
+                        key={index}
+                        className="rounded-md border px-2 py-1 text-sm"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <dt className="opacity-60 text-sm">Tags</dt>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.tags.map((r, index) => (
+                      <span
+                        key={index}
+                        className="rounded-md border px-2 py-1 text-sm"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </dl>
 

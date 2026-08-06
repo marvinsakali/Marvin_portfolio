@@ -17,7 +17,7 @@ const RecordList = ({ kind, title, intro, records }) => {
 };
   return (
     <main className="flex-1">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
         <header className="border-b border-border py-14 sm:py-20">
           <span
             className="text-[10px] tracking-[0.16em] uppercase"
