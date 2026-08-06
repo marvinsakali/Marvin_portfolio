@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import { RecordCard } from "../components/RecordCard";
 import { TYPE_META, formatDate } from "../lib/atlas";
 import { sampleFeatures } from "../lib/features.queries";
+import StartHereSection from "../components/StartHereSection";
+import GisTechStack from "../components/GisTechStack";
+import SoftwareTechStack from "../components/SoftwareTechStack";
+import { ArrowRight } from "lucide-react";
 
 const Home = () => {
   const records = sampleFeatures;
@@ -62,8 +66,8 @@ const STACK = [
             Fullstack developer / Geospatial systems / 1.2868° S, 36.8172° E
           </p>
           <h1 className="mt-6 max-w-4xl font-display text-4xl leading-[1.05] font-semibold text-balance sm:text-6xl">
-            I build systems that know{" "}
-            <span className="text-primary">where things are</span>.
+            I build systems that are{" "}
+            <span className="text-primary">safe and seamless</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-sm md:text-lg font-medium leading-relaxed text-muted-foreground">
             This site is one of them. Every project, note and guide below is a
@@ -131,7 +135,7 @@ const STACK = [
       <section className="border-b border-border">
         <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xl">Gis Selected work</h2>
+            <h2 className="text-2xl">Selected work</h2>
             <Link to="/work" className="label hover:text-foreground">
               All on the map →
             </Link>
@@ -144,56 +148,95 @@ const STACK = [
         </div>
       </section>
 
+
+       <StartHereSection/> 
+       <GisTechStack/>
+       <SoftwareTechStack/>    
       {/* Stack + latest writing */}
       <section className="border-b border-border">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2">
-          <div>
-            <h2 className="text-xl">Stack</h2>
-            <dl className="mt-6 divide-y divide-border border-y border-border">
-              {STACK.map(([group, items]) => (
-                <div
-                  key={group}
-                  className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-8"
-                >
-                  <dt className="label w-28 shrink-0 pt-0.5">{group}</dt>
-                  <dd className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8rem] text-foreground">
-                    {items.map((i) => (
-                      <span key={i}>{i}</span>
-                    ))}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+  <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6">
+    <div className="max-w-2xl">
+      <p className="label">LATEST WRITING</p>
 
-          <div>
-            <h2 className="text-xl">Latest writing</h2>
-            <ul className="mt-6 divide-y divide-border border-y border-border">
-              {latest.map((r) => (
-                <li key={r.id}>
-                  <Link
-                    to={r.type === "note" ? `/notes/${r.slug}` : `/guides/${r.slug}`}
-                    params={{ slug: r.slug }}
-                    className="group flex flex-col gap-1 py-4 transition-colors hover:bg-card/60"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="size-1.5"
-                        style={{ background: TYPE_META[r.type].color }}
-                        aria-hidden
-                      />
-                      <span className="label">{formatDate(r.date)}</span>
-                    </div>
-                    <span className="text-[0.95rem] text-foreground group-hover:text-primary">
-                      {r.title}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <h2 className="mt-3 text-3xl font-semibold">
+        Notes from the field.
+      </h2>
+
+      <p className="mt-4 text-muted-foreground">
+        Technical guides, engineering notes, and observations from building
+        systems that bridge the digital and physical worlds.
+      </p>
+    </div>
+
+    <div className="mt-12 grid gap-6 lg:grid-cols-2">
+      {latest.map((post, index) => {
+        const href =
+          post.type === "note"
+            ? `/notes/${post.slug}`
+            : `/guides/${post.slug}`;
+
+        return (
+          <Link
+            key={post.id}
+            to={href}
+            params={{ slug: post.slug }}
+            className={`group overflow-hidden border border-border transition-all duration-300 hover:border-primary hover:-translate-y-1 ${
+              index === 0
+                ? "flex flex-col lg:row-span-2"
+                : "flex flex-col sm:flex-row"
+            }`}
+          >
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              className={`object-cover ${
+                index === 0
+                  ? "h-64 w-full"
+                  : "h-52 w-full sm:h-auto sm:w-60"
+              }`}
+            />
+
+            <div className="flex flex-1 flex-col p-6">
+              <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
+                <span>{formatDate(post.date)}</span>
+
+                <span className="h-1 w-1 rounded-full bg-border" />
+
+                <span>{TYPE_META[post.type].label}</span>
+              </div>
+
+              <h3 className="mt-4 text-xl font-semibold group-hover:text-primary">
+                {post.title}
+              </h3>
+
+              {post.excerpt && (
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                  {post.excerpt}
+                </p>
+              )}
+
+              <div className="mt-auto pt-6">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Read article
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+
+    <div className="mt-10 flex justify-center">
+      <Link
+        to="/writing"
+        className="rounded-full border border-border px-6 py-2 text-sm transition-colors hover:bg-card"
+      >
+        View all writing
+      </Link>
+    </div>
+  </div>
+</section>
 
       {/* Now / contact */}
       <section>

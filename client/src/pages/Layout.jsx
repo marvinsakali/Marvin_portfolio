@@ -90,7 +90,7 @@ const SiteFooter = () => {
 
 const Layout = () => {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden">
+    <div className="relative flex min-h-screen flex-col ">
 
      
 
