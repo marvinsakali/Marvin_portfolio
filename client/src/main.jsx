@@ -6,7 +6,7 @@ import App from './App.jsx'
 import "maplibre-gl/dist/maplibre-gl.css";
 
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  <BrowserRouter basename="/Marvin_portfolio/">
     <App />
   </BrowserRouter>,
 )
