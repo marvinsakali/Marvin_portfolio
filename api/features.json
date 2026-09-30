@@ -1,0 +1,185 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "g-postgis",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [2.3522, 48.8566]
+      },
+      "properties": {
+        "type": "guide",
+        "title": "PostGIS from zero: points, indexes, and your first spatial query",
+        "slug": "postgis-from-zero",
+        "summary": "A 20-minute path from CREATE EXTENSION to a working nearest-neighbour query, with the mistakes marked.",
+        "date": "2026-02-10",
+        "tags": ["postgis", "sql", "beginner"],
+        "stack": ["Postgres", "PostGIS"],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "n-srid",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [4.8952, 52.3702]
+      },
+      "properties": {
+        "type": "note",
+        "title": "The projection you pick is a decision, not a detail",
+        "slug": "projection-is-a-decision",
+        "summary": "Web Mercator is fine for tiles and wrong for area. A short field note on when to reproject and when to leave the data alone.",
+        "date": "2026-01-22",
+        "tags": ["srid", "cartography", "fundamentals"],
+        "stack": [],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "n-index",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.4194, 37.7749]
+      },
+      "properties": {
+        "type": "note",
+        "title": "A GiST index will not save a bad query",
+        "slug": "gist-index-bad-query",
+        "summary": "Notes from a week spent making a slow spatial join fast, and the moment the planner finally stopped ignoring the index.",
+        "date": "2025-12-08",
+        "tags": ["postgis", "performance", "sql"],
+        "stack": [],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "g-maplibre",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.7038, 40.4168]
+      },
+      "properties": {
+        "type": "guide",
+        "title": "MapLibre without the boilerplate",
+        "slug": "maplibre-without-the-boilerplate",
+        "summary": "Mounting a map in React, keeping state out of the render loop, and wiring filters that update the source instead of remounting it.",
+        "date": "2025-11-18",
+        "tags": ["maplibre", "react", "frontend"],
+        "stack": ["React", "MapLibre GL"],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "p-tidal",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-4.1427, 50.3714]
+      },
+      "properties": {
+        "type": "project",
+        "title": "Tidal Ledger",
+        "slug": "tidal-ledger",
+        "summary": "Real-time tide and storm-surge dashboard for small harbour operators, backed by a PostGIS station network and 10-minute sensor ingest.",
+        "date": "2025-11-04",
+        "tags": ["timeseries", "coastal", "dashboard"],
+        "stack": ["React", "TanStack Start", "PostGIS", "MapLibre"],
+        "link": "https://github.com/"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "n-onetable",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [13.405, 52.52]
+      },
+      "properties": {
+        "type": "note",
+        "title": "One table, three kinds of record",
+        "slug": "one-table-three-records",
+        "summary": "Why this site keeps projects, notes and guides in a single discriminated table instead of three content systems drifting apart.",
+        "date": "2025-10-14",
+        "tags": ["architecture", "content", "postgres"],
+        "stack": [],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "g-geojson",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6917, 35.6895]
+      },
+      "properties": {
+        "type": "guide",
+        "title": "Designing a GeoJSON API that stays fast",
+        "slug": "geojson-api-that-stays-fast",
+        "summary": "Filtering, pagination and payload shape for feature endpoints — plus when to stop sending GeoJSON entirely.",
+        "date": "2025-09-01",
+        "tags": ["api", "geojson", "performance"],
+        "stack": ["TypeScript", "PostGIS"],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "p-parcel",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [19.945, 50.0647]
+      },
+      "properties": {
+        "type": "project",
+        "title": "Parcel Reconciler",
+        "slug": "parcel-reconciler",
+        "summary": "Diffing engine that reconciles cadastral parcel geometries between two survey vintages and flags topology drift for review.",
+        "date": "2025-08-19",
+        "tags": ["cadastre", "topology", "etl"],
+        "stack": ["TypeScript", "PostGIS", "Postgres", "Node"],
+        "link": "https://github.com/"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "n-basemap",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.3832, 43.6532]
+      },
+      "properties": {
+        "type": "note",
+        "title": "Do not build a tile pipeline yet",
+        "slug": "do-not-build-a-tile-pipeline-yet",
+        "summary": "Vector tiling is a real engineering commitment. Here is the list of symptoms that mean you have actually earned it.",
+        "date": "2025-07-30",
+        "tags": ["tiles", "maplibre", "scoping"],
+        "stack": [],
+        "link": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "p-transit",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-73.5673, 45.5017]
+      },
+      "properties": {
+        "type": "project",
+        "title": "Headway",
+        "slug": "headway",
+        "summary": "GTFS-realtime ingester and isochrone service answering what can I reach in 30 minutes for a mid-size transit agency.",
+        "date": "2025-06-02",
+        "tags": ["transit", "routing", "isochrone"],
+        "stack": ["React", "pgRouting", "PostGIS", "Redis"],
+        "link": "https://github.com/"
+      }
+    }
+  ]
+}
