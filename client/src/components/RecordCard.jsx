@@ -18,7 +18,7 @@ const TypeBadge = ({ type }) => {
     </span>
   );
 };
-
+// recods
 const RecordCard = ({ record }) => {
   const meta = TYPE_META[record.type];
 
