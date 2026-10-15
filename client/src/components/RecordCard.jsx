@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { TYPE_META, formatDate } from "../lib/atlas";
-
+// records
 const TypeBadge = ({ type }) => {
   const meta = TYPE_META[type];
 
