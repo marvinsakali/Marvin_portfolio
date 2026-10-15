@@ -1,6 +1,5 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
@@ -12,7 +11,7 @@
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --font-display: "Space Grotesk", system-ui, sans-serif;
@@ -116,7 +115,7 @@
     font-weight: 300;
     line-height: 32px;
   }
-  
+
   dt,
   dl,
   dd {
@@ -136,7 +135,8 @@
     font-weight: 300;
     line-height: 12px;
   }
-   ul,
+
+  ul,
   li,
   ol {
     font-family:
@@ -174,7 +174,6 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* Long-form MDX body */
 @utility prose-field {
   & > * + * {
     margin-top: 1.15rem;
@@ -188,19 +187,23 @@
     margin-top: 2.75rem;
     color: var(--color-foreground);
   }
+
   & h3 {
     font-size: 1.05rem;
     margin-top: 2rem;
     color: var(--color-foreground);
   }
+
   & a {
     color: var(--color-primary);
     text-underline-offset: 3px;
     text-decoration: underline;
   }
+
   & strong {
     color: var(--color-foreground);
   }
+
   & ul,
   & ol {
     padding-left: 1.15rem;
@@ -208,26 +211,32 @@
     flex-direction: column;
     gap: 0.4rem;
   }
+
   & ul {
     list-style: square;
   }
+
   & ol {
     list-style: decimal;
   }
+
   & li::marker {
     color: var(--color-primary);
   }
+
   & blockquote {
     border-left: 2px solid var(--color-primary);
     padding-left: 1rem;
     color: var(--color-muted-foreground);
   }
+
   & code {
     font-family: var(--font-mono);
     font-size: 0.85em;
     background: var(--color-surface-2);
     padding: 0.1rem 0.3rem;
   }
+
   & pre {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -236,16 +245,17 @@
     font-size: 0.8rem;
     line-height: 1.6;
   }
+
   & pre code {
     background: transparent;
     padding: 0;
   }
+
   & hr {
     border-color: var(--color-border);
   }
 }
 
-/* MapLibre chrome, tuned to the palette */
 .maplibregl-ctrl-attrib,
 .maplibregl-ctrl-attrib a {
   background: transparent !important;
