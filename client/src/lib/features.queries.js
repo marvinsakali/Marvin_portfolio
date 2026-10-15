@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { assests } from "../assets/assets";
 
 // Sample data
 export const sampleFeatures = [
@@ -137,6 +138,7 @@ export const sampleFeatures = [
     link: null,
     lng: 4.8952,
     lat: 52.3702,
+    coverImage: assests.world_img
   },
 
   {
@@ -153,6 +155,7 @@ export const sampleFeatures = [
     link: null,
     lng: -122.4194,
     lat: 37.7749,
+    coverImage: assests.gist_img
   },
 
   {
@@ -169,6 +172,7 @@ export const sampleFeatures = [
     link: null,
     lng: -79.3832,
     lat: 43.6532,
+    coverImage: assests.coding_img
   },
 
   {
