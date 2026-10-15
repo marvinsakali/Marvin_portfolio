@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import * as maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 
 const COLORS = {
   project: "#c99a2e",
@@ -50,185 +48,181 @@ const AtlasMap = ({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [8, 30],
-      zoom: 1.35,
-      attributionControl: {
-        compact: true,
-      },
-    });
+    let mounted = true;
+    let createdMap = null;
 
-    mapRef.current = map;
+    // Dynamically import MapLibre (and its CSS) so the bundler doesn't process it at top-level
+    (async () => {
+      try {
+        await import("maplibre-gl/dist/maplibre-gl.css");
+        const mod = await import("maplibre-gl");
+        const maplibregl = mod.default || mod;
 
-    map.addControl(
-      new maplibregl.NavigationControl({
-        showCompass: false,
-      })
-    );
+        if (!mounted) return;
 
-    map.on("load", () => {
-      // Recolour the basemap
-      (map.getStyle().layers || []).forEach((layer) => {
-        if (layer.type === "background") {
-          map.setPaintProperty(
-            layer.id,
-            "background-color",
-            "#0c1420"
-          );
-        } else if (layer.type === "fill") {
-          map.setPaintProperty(
-            layer.id,
-            "fill-color",
-            "#131f2e"
-          );
+        const map = new maplibregl.Map({
+          container: containerRef.current,
+          style: "https://demotiles.maplibre.org/style.json",
+          center: [8, 30],
+          zoom: 1.35,
+          attributionControl: {
+            compact: true,
+          },
+        });
 
-          map.setPaintProperty(
-            layer.id,
-            "fill-outline-color",
-            "#243447"
-          );
-        } else if (layer.type === "line") {
-          map.setPaintProperty(
-            layer.id,
-            "line-color",
-            "#243447"
-          );
-        } else if (layer.type === "symbol") {
-          map.setLayoutProperty(
-            layer.id,
-            "visibility",
-            "none"
-          );
-        }
-      });
+        createdMap = map;
+        mapRef.current = map;
 
-      map.addSource("features", {
-        type: "geojson",
-        data: toGeoJSON(dataRef.current),
-      });
+        map.addControl(
+          new maplibregl.NavigationControl({
+            showCompass: false,
+          })
+        );
 
-      map.addLayer({
-        id: "feature-halo",
-        type: "circle",
-        source: "features",
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            1,
-            10,
-            8,
-            22,
-          ],
+        map.on("load", () => {
+          // Recolour the basemap
+          (map.getStyle().layers || []).forEach((layer) => {
+            if (layer.type === "background") {
+              map.setPaintProperty(layer.id, "background-color", "#0c1420");
+            } else if (layer.type === "fill") {
+              map.setPaintProperty(layer.id, "fill-color", "#131f2e");
+              map.setPaintProperty(layer.id, "fill-outline-color", "#243447");
+            } else if (layer.type === "line") {
+              map.setPaintProperty(layer.id, "line-color", "#243447");
+            } else if (layer.type === "symbol") {
+              map.setLayoutProperty(layer.id, "visibility", "none");
+            }
+          });
 
-          "circle-color": [
-            "match",
-            ["get", "type"],
-            "project",
-            COLORS.project,
-            "note",
-            COLORS.note,
-            "guide",
-            COLORS.guide,
-            "#e7e4d8",
-          ],
+          map.addSource("features", {
+            type: "geojson",
+            data: toGeoJSON(dataRef.current),
+          });
 
-          "circle-opacity": 0.12,
-        },
-      });
+          map.addLayer({
+            id: "feature-halo",
+            type: "circle",
+            source: "features",
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                1,
+                10,
+                8,
+                22,
+              ],
 
-      map.addLayer({
-        id: "feature-points",
-        type: "circle",
-        source: "features",
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            1,
-            4.5,
-            8,
-            8,
-          ],
+              "circle-color": [
+                "match",
+                ["get", "type"],
+                "project",
+                COLORS.project,
+                "note",
+                COLORS.note,
+                "guide",
+                COLORS.guide,
+                "#e7e4d8",
+              ],
 
-          "circle-color": [
-            "match",
-            ["get", "type"],
-            "project",
-            COLORS.project,
-            "note",
-            COLORS.note,
-            "guide",
-            COLORS.guide,
-            "#e7e4d8",
-          ],
+              "circle-opacity": 0.12,
+            },
+          });
 
-          "circle-stroke-width": 1.25,
-          "circle-stroke-color": "#0c1420",
-        },
-      });
+          map.addLayer({
+            id: "feature-points",
+            type: "circle",
+            source: "features",
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                1,
+                4.5,
+                8,
+                8,
+              ],
 
-      readyRef.current = true;
-    });
+              "circle-color": [
+                "match",
+                ["get", "type"],
+                "project",
+                COLORS.project,
+                "note",
+                COLORS.note,
+                "guide",
+                COLORS.guide,
+                "#e7e4d8",
+              ],
 
-    const onClick = (e) => {
-      const slug = e.features?.[0]?.properties?.slug;
+              "circle-stroke-width": 1.25,
+              "circle-stroke-color": "#0c1420",
+            },
+          });
 
-      if (slug) {
-        handlersRef.current.onSelect(slug);
+          readyRef.current = true;
+        });
+
+        const onClick = (e) => {
+          const slug = e.features?.[0]?.properties?.slug;
+          if (slug) handlersRef.current.onSelect(slug);
+        };
+
+        const onEnter = () => {
+          map.getCanvas().style.cursor = "pointer";
+        };
+
+        const onLeave = () => {
+          map.getCanvas().style.cursor = "";
+        };
+
+        const onMove = (e) => {
+          handlersRef.current.onCursor([e.lngLat.lng, e.lngLat.lat]);
+        };
+
+        const onOut = () => {
+          handlersRef.current.onCursor(null);
+        };
+
+        map.on("click", "feature-points", onClick);
+        map.on("mouseenter", "feature-points", onEnter);
+        map.on("mouseleave", "feature-points", onLeave);
+        map.on("mousemove", onMove);
+        map.on("mouseout", onOut);
+      } catch (err) {
+        // If MapLibre cannot be imported in the build environment, log and fail gracefully
+        // The app can still render without the map
+        // eslint-disable-next-line no-console
+        console.error("Failed to load MapLibre GL:", err);
       }
-    };
-
-    const onEnter = () => {
-      map.getCanvas().style.cursor = "pointer";
-    };
-
-    const onLeave = () => {
-      map.getCanvas().style.cursor = "";
-    };
-
-    const onMove = (e) => {
-      handlersRef.current.onCursor([
-        e.lngLat.lng,
-        e.lngLat.lat,
-      ]);
-    };
-
-    const onOut = () => {
-      handlersRef.current.onCursor(null);
-    };
-
-    map.on("click", "feature-points", onClick);
-    map.on("mouseenter", "feature-points", onEnter);
-    map.on("mouseleave", "feature-points", onLeave);
-    map.on("mousemove", onMove);
-    map.on("mouseout", onOut);
+    })();
 
     return () => {
+      mounted = false;
       readyRef.current = false;
-      map.remove();
-      mapRef.current = null;
+      if (createdMap) {
+        try {
+          createdMap.remove();
+        } catch (e) {
+          // ignore
+        }
+        mapRef.current = null;
+      }
     };
   }, []);
 
   // Update source when records change
   useEffect(() => {
     const map = mapRef.current;
-
     if (!map) return;
-
     const apply = () => {
       const source = map.getSource("features");
-
       if (source) {
         source.setData(toGeoJSON(records));
       }
     };
-
     if (readyRef.current) {
       apply();
     } else {
@@ -239,15 +233,9 @@ const AtlasMap = ({
   // Fly to selected record
   useEffect(() => {
     const map = mapRef.current;
-
     if (!map || !selectedSlug) return;
-
-    const record = records.find(
-      (r) => r.slug === selectedSlug
-    );
-
+    const record = records.find((r) => r.slug === selectedSlug);
     if (!record) return;
-
     map.easeTo({
       center: [record.lng, record.lat],
       zoom: Math.max(map.getZoom(), 4),
