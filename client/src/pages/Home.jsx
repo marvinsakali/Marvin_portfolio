@@ -60,8 +60,8 @@ const STACK = [
   return (
       <main>
       {/* Hero */}
-      <section className="border-b border-border ">
-        <div className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6 sm:py-28">
+      <section className="">
+        <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 sm:py-28">
           <p className="label">
             Fullstack developer / Geospatial systems / 1.2868° S, 36.8172° E
           </p>
@@ -93,7 +93,7 @@ const STACK = [
       </section>
 
       {/* Tracks */}
-      <section className="border-b border-border">
+      <section className="">
         <div className="mx-auto grid max-w-[1400px] grid-cols-1 md:grid-cols-3">
           {TRACKS.map((track, i) => {
             const meta = TYPE_META[track.key];
@@ -132,7 +132,7 @@ const STACK = [
       </section>
 
       {/* Selected work */}
-      <section className="border-b border-border">
+      <section className="">
         <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6">
           <div className="flex items-baseline justify-between">
             <h2 className="text-2xl">Selected work</h2>

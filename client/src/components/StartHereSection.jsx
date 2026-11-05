@@ -57,7 +57,7 @@ const services = [
 
 export default function StartHereSection() {
   return (
-    <section className="mx-auto max-w-8xl px-6 py-24">
+    <section className="mx-auto max-w-8xl xl:max-w-[1400px] px-6 py-16">
       <div className="max-w-3xl">
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground">
           START HERE

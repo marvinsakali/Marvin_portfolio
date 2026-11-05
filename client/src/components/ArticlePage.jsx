@@ -11,9 +11,9 @@ const ArticlePage = ({ record }) => {
 
   return (
     <main className="flex-1">
-      <article className="mx-auto max-w-[1200px] px-4 sm:px-6">
+      <article className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <div className="grid grid-cols-1 gap-10 py-12 lg:grid-cols-[1fr_260px] lg:py-16">
-          <div className="max-w-2xl">
+          <div className="max-w-4xl max-sm:max-w-2xl">
             <Link to={backTo} className="label hover:text-foreground">
               ← {meta.plural}
             </Link>
