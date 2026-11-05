@@ -50,6 +50,7 @@ const AtlasMap = ({
 
     let mounted = true;
     let createdMap = null;
+    let themeObserver = null;
 
     // Dynamically import MapLibre (and its CSS) so the bundler doesn't process it at top-level
     (async () => {
@@ -80,19 +81,31 @@ const AtlasMap = ({
         );
 
         map.on("load", () => {
-          // Recolour the basemap
-          (map.getStyle().layers || []).forEach((layer) => {
-            if (layer.type === "background") {
-              map.setPaintProperty(layer.id, "background-color", "#0c1420");
-            } else if (layer.type === "fill") {
-              map.setPaintProperty(layer.id, "fill-color", "#131f2e");
-              map.setPaintProperty(layer.id, "fill-outline-color", "#243447");
-            } else if (layer.type === "line") {
-              map.setPaintProperty(layer.id, "line-color", "#243447");
-            } else if (layer.type === "symbol") {
-              map.setLayoutProperty(layer.id, "visibility", "none");
+          const applyTheme = () => {
+            const isLight = document.documentElement.dataset.theme === "light";
+            const colors = isLight
+              ? { background: "#eeeae0", fill: "#e2ded3", line: "#c8c1b2", stroke: "#eeeae0" }
+              : { background: "#0c1420", fill: "#131f2e", line: "#243447", stroke: "#0c1420" };
+
+            (map.getStyle().layers || []).forEach((layer) => {
+              if (layer.type === "background") {
+                map.setPaintProperty(layer.id, "background-color", colors.background);
+              } else if (layer.type === "fill") {
+                map.setPaintProperty(layer.id, "fill-color", colors.fill);
+                map.setPaintProperty(layer.id, "fill-outline-color", colors.line);
+              } else if (layer.type === "line") {
+                map.setPaintProperty(layer.id, "line-color", colors.line);
+              } else if (layer.type === "symbol") {
+                map.setLayoutProperty(layer.id, "visibility", "none");
+              }
+            });
+            if (map.getLayer("feature-points")) {
+              map.setPaintProperty("feature-points", "circle-stroke-color", colors.stroke);
             }
-          });
+          };
+          applyTheme();
+          themeObserver = new MutationObserver(applyTheme);
+          themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
           map.addSource("features", {
             type: "geojson",
@@ -202,6 +215,7 @@ const AtlasMap = ({
     return () => {
       mounted = false;
       readyRef.current = false;
+      themeObserver?.disconnect();
       if (createdMap) {
         try {
           createdMap.remove();

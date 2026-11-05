@@ -1,4 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 
 const NAV = [
@@ -21,6 +23,24 @@ const NAV = [
 
 
 const SiteHeader = () => {
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("atlas-theme") === "light" ? "light" : "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try {
+      localStorage.setItem("atlas-theme", theme);
+    } catch {
+      // The theme still works when browser storage is unavailable.
+    }
+  }, [theme]);
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 sm:px-6">
@@ -55,6 +75,15 @@ const SiteHeader = () => {
 
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+            className="ml-1 inline-flex size-9 items-center justify-center border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+          </button>
         </nav>
 
       </div>
