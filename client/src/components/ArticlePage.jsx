@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { TYPE_META, formatCoords, formatDate } from "../lib/atlas";
 import { loadContent } from "../lib/content";
+import {ArrowBigLeft, ArrowLeft} from "lucide-react"
 
 
 const ArticlePage = ({ record }) => {
@@ -14,8 +15,8 @@ const ArticlePage = ({ record }) => {
       <article className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <div className="grid grid-cols-1 gap-10 py-12 lg:grid-cols-[1fr_260px] lg:py-16">
           <div className="max-w-4xl max-sm:max-w-2xl">
-            <Link to={backTo} className="label hover:text-foreground">
-              ← {meta.plural}
+            <Link to={backTo} className="label hover:text-foreground flex gap-2 items-center font-bold">
+              <ArrowBigLeft size={20}/> {meta.plural}
             </Link>
 
             <p
@@ -37,7 +38,7 @@ const ArticlePage = ({ record }) => {
 
             {doc ? (
               <div
-                className="prose-field"
+                className="prose-field "
                 dangerouslySetInnerHTML={{ __html: doc.html }}
               />
             ) : (
