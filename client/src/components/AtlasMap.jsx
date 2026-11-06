@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 const COLORS = {
   project: "#c99a2e",
@@ -58,6 +59,10 @@ const AtlasMap = ({
         await import("maplibre-gl/dist/maplibre-gl.css");
         const mod = await import("maplibre-gl");
         const maplibregl = mod.default || mod;
+
+        // Vite emits the worker as a hashed asset and includes the configured
+        // base path. Tell MapLibre to use that generated URL explicitly.
+        maplibregl.setWorkerUrl(workerUrl);
 
         if (!mounted) return;
 
