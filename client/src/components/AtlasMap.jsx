@@ -28,6 +28,8 @@ const AtlasMap = ({
   selectedSlug,
   onSelect,
   onCursor,
+  initialView,
+  onViewChange,
 }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -36,11 +38,13 @@ const AtlasMap = ({
   const handlersRef = useRef({
     onSelect,
     onCursor,
+    onViewChange,
   });
 
   handlersRef.current = {
     onSelect,
     onCursor,
+    onViewChange,
   };
 
   const dataRef = useRef(records);
@@ -69,8 +73,8 @@ const AtlasMap = ({
         const map = new maplibregl.Map({
           container: containerRef.current,
           style: "https://demotiles.maplibre.org/style.json",
-          center: [8, 30],
-          zoom: 1.35,
+          center: initialView?.center || [8, 30],
+          zoom: initialView?.zoom || 1.35,
           attributionControl: {
             compact: true,
           },
@@ -209,6 +213,13 @@ const AtlasMap = ({
         map.on("mouseleave", "feature-points", onLeave);
         map.on("mousemove", onMove);
         map.on("mouseout", onOut);
+        map.on("moveend", () => {
+          const center = map.getCenter();
+          handlersRef.current.onViewChange?.({
+            center: [center.lng, center.lat],
+            zoom: map.getZoom(),
+          });
+        });
       } catch (err) {
         // If MapLibre cannot be imported in the build environment, log and fail gracefully
         // The app can still render without the map

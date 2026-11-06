@@ -1,27 +1,53 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import AtlasMap from "../components/AtlasMap";
 
 import { TYPE_META, formatCoords, formatDate } from "../lib/atlas";
 import { sampleFeatures } from "../lib/features.queries";
 
 const ALL_TYPES = ["project", "note", "guide"];
+const DEFAULT_VIEW = { center: [8, 30], zoom: 1.35 };
+
+const parseView = (searchParams) => {
+  const longitude = Number(searchParams.get("lon"));
+  const latitude = Number(searchParams.get("lat"));
+  const zoom = Number(searchParams.get("zoom"));
+
+  if (![longitude, latitude, zoom].every(Number.isFinite)) return DEFAULT_VIEW;
+
+  return {
+    center: [longitude, latitude],
+    zoom: Math.min(Math.max(zoom, 1), 18),
+  };
+};
 
 const Work = () => {
   const records = sampleFeatures;
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [active, setActive] = useState(ALL_TYPES);
-  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(() => {
+    const types = searchParams.get("type")?.split(",") || ALL_TYPES;
+    return types.filter((type) => ALL_TYPES.includes(type));
+  });
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [cursor, setCursor] = useState(null);
-  const [selectedSlug, setSelectedSlug] = useState(null);
+  const [selectedSlug, setSelectedSlug] = useState(() => {
+    const slug = searchParams.get("focus");
+    return records.some((record) => record.slug === slug) ? slug : null;
+  });
   const [playing, setPlaying] = useState(false);
+  const [viewState, setViewState] = useState(() => parseView(searchParams));
+  const [copied, setCopied] = useState(false);
 
   const years = records.map((r) => Number(r.date.slice(0, 4)));
     
   const minYear = years.length ? Math.min(...years) : 2024;
   const maxYear = years.length ? Math.max(...years) : new Date().getFullYear();
 
-  const [timelineYear, setTimelineYear] = useState(minYear);
+  const [timelineYear, setTimelineYear] = useState(() => {
+    const year = Number(searchParams.get("year"));
+    return Number.isFinite(year) ? Math.min(Math.max(year, minYear), maxYear) : minYear;
+  });
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,6 +77,46 @@ const Work = () => {
     setActive((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
+  };
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+
+    if (active.length === ALL_TYPES.length) next.delete("type");
+    else next.set("type", active.join(","));
+
+    if (query.trim()) next.set("q", query.trim());
+    else next.delete("q");
+
+    if (timelineYear === minYear) next.delete("year");
+    else next.set("year", String(timelineYear));
+
+    if (selectedSlug) next.set("focus", selectedSlug);
+    else next.delete("focus");
+
+    if (
+      viewState.center[0] === DEFAULT_VIEW.center[0] &&
+      viewState.center[1] === DEFAULT_VIEW.center[1] &&
+      viewState.zoom === DEFAULT_VIEW.zoom
+    ) {
+      next.delete("lon");
+      next.delete("lat");
+      next.delete("zoom");
+    } else {
+      next.set("lon", viewState.center[0].toFixed(4));
+      next.set("lat", viewState.center[1].toFixed(4));
+      next.set("zoom", viewState.zoom.toFixed(2));
+    }
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [active, minYear, query, searchParams, selectedSlug, setSearchParams, timelineYear, viewState]);
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
   };
   useEffect(() => {
     if (!playing) return;
@@ -175,6 +241,12 @@ const Work = () => {
               >
                 Reset
               </button>
+              <button
+                onClick={copyLink}
+                className="label rounded border border-border px-3 py-1 hover:bg-card"
+              >
+                {copied ? "Copied" : "Copy link"}
+              </button>
             </div>
           </div>
 
@@ -226,6 +298,8 @@ const Work = () => {
             selectedSlug={selectedSlug}
             onSelect={setSelectedSlug}
             onCursor={setCursor}
+            initialView={viewState}
+            onViewChange={setViewState}
           />
 
           {/* Legend */}
