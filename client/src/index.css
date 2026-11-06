@@ -79,11 +79,11 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --background: oklch(0.965 0.018 88);
+  --background: oklch(100% 0.00011 271.152);
   --foreground: oklch(0.24 0.025 252);
-  --surface: oklch(0.94 0.022 88);
-  --surface-2: oklch(0.91 0.025 88);
-  --card: oklch(0.985 0.012 88);
+  --surface: oklch(98.164% 0.00181 249.244);;
+  --surface-2: oklch(98.164% 0.00181 249.244);;
+  --card: oklch(98.164% 0.00181 249.244);
   --card-foreground: oklch(0.24 0.025 252);
   --popover: oklch(0.985 0.012 88);
   --popover-foreground: oklch(0.24 0.025 252);
